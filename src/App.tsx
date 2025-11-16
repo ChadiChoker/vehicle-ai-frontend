@@ -35,6 +35,8 @@ interface ResultsResponse {
   results: DamageResults;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export default function App() {
   const [inspectionId, setInspectionId] = useState<string | null>(null);
   const [side, setSide] = useState<string>("front");
@@ -49,7 +51,7 @@ export default function App() {
   const createInspection = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/inspections", { method: "POST" });
+      const res = await fetch(`${API_URL}/api/inspections`, { method: "POST" });
       if (!res.ok) throw new Error("Failed to create inspection");
       const json = await res.json();
       setInspectionId(json.inspectionId);
@@ -89,7 +91,7 @@ export default function App() {
       formData.append("side", side);
       formData.append("type", type);
 
-      const res = await fetch(`/api/inspections/${inspectionId}/photos`, {
+      const res = await fetch(`${API_URL}/api/inspections/${inspectionId}/photos`, {
         method: "POST",
         body: formData,
       });
@@ -113,10 +115,10 @@ export default function App() {
 
     setLoading(true);
     try {
-      const analyzeRes = await fetch(`/api/inspections/${inspectionId}/analyze`, { method: "POST" });
+      const analyzeRes = await fetch(`${API_URL}/api/inspections/${inspectionId}/analyze`, { method: "POST" });
       if (!analyzeRes.ok) throw new Error("Analyze failed");
 
-      const resultsRes = await fetch(`/api/inspections/${inspectionId}/results`);
+      const resultsRes = await fetch(`${API_URL}/api/inspections/${inspectionId}/results`);
       if (!resultsRes.ok) throw new Error("Failed to fetch results");
 
       const resultsData: ResultsResponse = await resultsRes.json();
