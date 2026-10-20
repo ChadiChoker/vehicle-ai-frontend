@@ -1,73 +1,78 @@
-# React + TypeScript + Vite
+# Vehicle AI Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React interface for AI vehicle damage assessment: upload pickup and return photos, run the analysis, and see detected damage highlighted on the photos along with cost estimates.
 
-Currently, two official plugins are available:
+**Live demo:** [vehicle-ai-frontend.vercel.app](https://vehicle-ai-frontend.vercel.app) · **Backend:** [vehicle-ai-backend](https://github.com/ChadiChoker/vehicle-ai-backend)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Checking a vehicle at pickup and again at return usually means comparing photos by eye. This single-page app walks a user through an inspection step by step. It creates the inspection, uploads photos for each side of the vehicle, starts the AI analysis on the backend, and shows the results as a damage report next to annotated images.
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Guided workflow**: create inspection, upload pickup photo, upload return photo, analyze.
+- **Side selection**: tag photos as front, rear, left, or right.
+- **Damage highlights**: draws detected damage regions on the uploaded photos with an HTML canvas.
+- **Damage report**: lists each issue with its label, severity, and estimated cost, plus the total estimated cost.
+- **Simple states**: buttons are disabled while a request is running or before an inspection exists.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+React 19 · TypeScript · Vite 7 · Tailwind CSS 4 · ESLint · deployed on Vercel
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Architecture
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Single component**: the whole flow lives in `src/App.tsx`.
+- **API calls**: uses `fetch` against `${VITE_API_URL}/api/inspections/...`:
+  - `POST /api/inspections`
+  - `POST /api/inspections/:id/photos`
+  - `POST /api/inspections/:id/analyze`
+  - `GET /api/inspections/:id/results`
+- **Rendering**: results are matched to photos by `photoId`, and each photo is drawn on its own `<canvas>` with circles around the bounding boxes.
+- **Dev proxy**: `vite.config.ts` proxies `/api` to `http://localhost:8000`.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```mermaid
+flowchart LR
+    UI[React app] -- REST --> API[vehicle-ai-backend]
+    API -- inference --> HF[Hugging Face]
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Getting Started
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js 20+
+- A running instance of [vehicle-ai-backend](https://github.com/ChadiChoker/vehicle-ai-backend), either local on port 8000 or deployed
+
+### Install
+
+```bash
+git clone https://github.com/ChadiChoker/vehicle-ai-frontend.git
+cd vehicle-ai-frontend
+npm install
 ```
+
+### Environment variables
+
+| Variable | Description |
+|---|---|
+| `VITE_API_URL` | Base URL of the backend, without `/api` |
+
+The repo ships with `.env.production`, which points at the deployed backend (`https://vehicle-ai-backend.onrender.com`). For local development, create `.env.local`:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+> The backend allows CORS from `http://localhost:5173` by default, which matches the Vite dev server.
+
+### Scripts
+
+```bash
+npm run dev       # start the Vite dev server (http://localhost:5173)
+npm run build     # type-check and build for production
+npm run preview   # preview the production build
+npm run lint      # run ESLint
+```
+
+---
+
+Built by [Chadi Choker](https://github.com/ChadiChoker) · [Portfolio](https://github.com/ChadiChoker/portfolio)
